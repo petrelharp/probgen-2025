@@ -210,8 +210,9 @@ thoughts on ARGs</h2>
 <div>
 <ul>
 <li class="fragment">a (non-pairwise!) way to work with haplotypes</li>
-<li class="fragment">a sparse (matrix) representation <em>(Hanbin Lee:
-Friday 1:30)</em></li>
+<li class="fragment">a sparse (matrix) representation <em><a
+href="https://www.biorxiv.org/content/10.1101/2025.03.03.641310v1">Lehmann
+et al 2025</a></em></li>
 <li class="fragment">a <em>time</em> axis for genomic data</li>
 </ul>
 </div>
@@ -330,7 +331,7 @@ groups that have historically been less well studied.
 <section id="what-does-allele-frequency-tell-us" class="slide level2">
 <h2>What <em>does</em> allele frequency tell us?</h2>
 <div class="columns">
-<div class="column" style="width:50%;">
+<div class="column" style="width:40%;">
 <p>If we see <span class="math inline">\(n\)</span> people with a
 certain allele (of single origin):</p>
 <div>
@@ -342,7 +343,7 @@ have that allele…</li>
 were depends on the age.</li>
 </ul>
 </div>
-</div><div class="column" style="width:50%;">
+</div><div class="column" style="width:60%;">
 <p><img data-src="figs/mut_age_and_freq.svg" style="width:100.0%" /></p>
 </div>
 </div>
@@ -588,31 +589,6 @@ style="width:70.0%" /></p>
 style="width:70.0%" /></p>
 </div>
 </div>
-</section>
-<section id="sample-size" class="slide level2"
-data-background-image="figs/folks/yan_wong.jpg"
-data-background-position="bottom 50px right 50px"
-data-background-size="10%">
-<h2 data-background-image="figs/folks/yan_wong.jpg"
-data-background-position="bottom 50px right 50px"
-data-background-size="10%">Sample size</h2>
-<p><img data-src="figs/sample_size_perf0.png" /></p>
-<!-- Fig 2: Outline and performance of tsdate on a known, simulated tree sequence of 2.85
-million chromosomes (chr17), conditioned on a known human pedigree. 
-Accuracy and error distribution of mutation dates: times are the midpoint of
-nodes above and below the mutation, restricted to sites with a single mutation present in the
-smallest (n = 25) tree sequence. Inset scatterplots illustrate how large sample sizes increase
-dating accuracy for recent mutations. Tickmarks on the error distributions are marked with
-median, 5% and 95% quantiles -->
-</section>
-<section id="validation-real-data" class="slide level2"
-data-background-image="figs/folks/yan_wong.jpg"
-data-background-position="bottom 50px right 50px"
-data-background-size="10%">
-<h2 data-background-image="figs/folks/yan_wong.jpg"
-data-background-position="bottom 50px right 50px"
-data-background-size="10%">Validation: real data</h2>
-<p><img data-src="figs/validation_sub.png" /></p>
 </section></section>
 <section>
 <section id="back-to-the-data" class="title-slide slide level1">
@@ -640,36 +616,22 @@ set of mutations at the same frequency in the data</p>
 <div class="centered">
 <p><img data-src="figs/bayes_factor.png" style="width:80.0%" /></p>
 </div>
-</section>
-<section id="deleterious-variants-are-enriched-in-recent-times"
-class="slide level2" data-background-image="figs/bayes_factor.png"
-data-background-position="center" data-background-size="50%">
-<h2 data-background-image="figs/bayes_factor.png"
-data-background-position="center" data-background-size="50%">Deleterious
-variants are enriched in recent times</h2>
 <p><img data-src="figs/missense_enrichment.png" /></p>
 </section>
 <section class="slide level2">
 
 <p><img data-src="figs/enrichment3.png" /></p>
 </section>
-<section class="slide level2">
-
-<p><img data-src="figs/sam/example-indiv.png" /></p>
-</section>
-<section id="conclusions" class="slide level2">
-<h2>Conclusions</h2>
+<section id="takeaways" class="slide level2">
+<h2>Takeaways</h2>
 <ul>
-<li><p>Mutations may be rare because they are recent or just because the
-individual’s ancestry is not well-represented in the data.</p></li>
-<li><p>ARGs capture the complex and continuous nature of human genetic
-ancestry.</p></li>
-<li><p>Mutations’ age estimation reflects this uncertainty (at single
-locus resolution).</p></li>
-<li><p>ARG inference and variant dating methods that work well with
-large, heterogeneous, and unbalanced biobanks can provide valuable
-insights into genetic variation <strong>without the need for discrete
-categorizations</strong>.</p></li>
+<li><p>Age contains information beyond allele frequency,</p></li>
+<li><p>and does not depend on binning individuals into discrete
+groups.</p></li>
+<li><p>Inferred age can appropriately represent uncertainty for
+individuals whose ancestry is not well-represented in the data.</p></li>
+<li><p>ARGs let us describe the complexity of human genetic variation in
+a way that can include everyone.</p></li>
 </ul>
 </section></section>
 <section>
@@ -790,6 +752,42 @@ data-background-image="figs/guillemots_thanks.png"
 data-background-position="center" data-background-size="50%">
 <h2 data-background-image="figs/guillemots_thanks.png"
 data-background-position="center" data-background-size="50%"></h2>
+</section>
+<section id="sample-size" class="slide level2"
+data-background-image="figs/folks/yan_wong.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="10%">
+<h2 data-background-image="figs/folks/yan_wong.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="10%">Sample size</h2>
+<p><img data-src="figs/sample_size_perf0.png" /></p>
+<!-- Fig 2: Outline and performance of tsdate on a known, simulated tree sequence of 2.85
+million chromosomes (chr17), conditioned on a known human pedigree. 
+Accuracy and error distribution of mutation dates: times are the midpoint of
+nodes above and below the mutation, restricted to sites with a single mutation present in the
+smallest (n = 25) tree sequence. Inset scatterplots illustrate how large sample sizes increase
+dating accuracy for recent mutations. Tickmarks on the error distributions are marked with
+median, 5% and 95% quantiles -->
+</section>
+<section id="validation-real-data" class="slide level2"
+data-background-image="figs/folks/yan_wong.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="10%">
+<h2 data-background-image="figs/folks/yan_wong.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="10%">Validation: real data</h2>
+<p><img data-src="figs/validation_sub.png" /></p>
+</section>
+<section id="deleterious-variants-are-enriched-in-recent-times"
+class="slide level2" data-background-image="figs/bayes_factor.png"
+data-background-position="center" data-background-size="50%">
+<h2 data-background-image="figs/bayes_factor.png"
+data-background-position="center" data-background-size="50%">Deleterious
+variants are enriched in recent times</h2>
+</section>
+<section class="slide level2">
+
+<p><img data-src="figs/sam/example-indiv.png" /></p>
 </section></section>
     </div>
   </div>
@@ -948,7 +946,6 @@ data-background-position="center" data-background-size="50%"></h2>
         mobileViewDistance: 2,
 
         math: {
-          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js',
           config: 'TeX-AMS_HTML-full',
           tex2jax: {
             inlineMath: [['\\(','\\)']],

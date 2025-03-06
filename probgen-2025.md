@@ -103,7 +103,7 @@ An ARG provides
 
 ::: incremental
 - a (non-pairwise!) way to work with haplotypes
-- a sparse (matrix) representation *(Hanbin Lee: Friday 1:30)*
+- a sparse (matrix) representation *[Lehmann et al 2025](https://www.biorxiv.org/content/10.1101/2025.03.03.641310v1)*
 - a *time* axis for genomic data
 :::
 
@@ -223,7 +223,7 @@ groups that have historically been less well studied.
 ## What *does* allele frequency tell us?
 
 ::: columns
-::::::: {.column width=50%}
+::::::: {.column width=40%}
 If we see $n$ people with a certain allele (of single origin):
 
 ::: incremental
@@ -234,7 +234,7 @@ If we see $n$ people with a certain allele (of single origin):
 
 
 :::::::
-::::::: {.column width=50%}
+::::::: {.column width=60%}
 
 ![](figs/mut_age_and_freq.svg){width=100%}
 
@@ -485,26 +485,6 @@ propagation -->
 
 :::
 
-
-## Sample size {data-background-image="figs/folks/yan_wong.jpg" data-background-position="bottom 50px right 50px" data-background-size=10%}
-
-![](figs/sample_size_perf0.png)
-
-<!-- Fig 2: Outline and performance of tsdate on a known, simulated tree sequence of 2.85
-million chromosomes (chr17), conditioned on a known human pedigree. 
-Accuracy and error distribution of mutation dates: times are the midpoint of
-nodes above and below the mutation, restricted to sites with a single mutation present in the
-smallest (n = 25) tree sequence. Inset scatterplots illustrate how large sample sizes increase
-dating accuracy for recent mutations. Tickmarks on the error distributions are marked with
-median, 5% and 95% quantiles -->
-
-
-
-## Validation: real data {data-background-image="figs/folks/yan_wong.jpg" data-background-position="bottom 50px right 50px" data-background-size=10%}
-
-![](figs/validation_sub.png)
-
-
 # Back to the data
 
 ## {data-background-image="figs/folks/ben_jeffery.jpg" data-background-position="bottom 50px right 50px" data-background-size=10%}
@@ -527,7 +507,6 @@ relative to some reference set of mutations at the same frequency in the data
 ![](figs/bayes_factor.png){width=80%}
 :::
 
-## Deleterious variants are enriched in recent times {data-background-image="figs/bayes_factor.png" data-background-position=center data-background-size=50%}
 
 ![](figs/missense_enrichment.png)
 
@@ -536,23 +515,17 @@ relative to some reference set of mutations at the same frequency in the data
 
 ![](figs/enrichment3.png)
 
------------
+## Takeaways
 
-![](figs/sam/example-indiv.png)
+- Age contains information beyond allele frequency,
 
-## Conclusions
+- and does not depend on binning individuals into discrete groups.
 
-- Mutations may be rare because they are recent
-    or just because the individual's ancestry is not well-represented in the data.
+- Inferred age can appropriately represent uncertainty for individuals
+    whose ancestry is not well-represented in the data.
 
-- ARGs capture the complex and continuous nature of human genetic ancestry. 
-
-- Mutations' age estimation reflects this uncertainty (at single locus resolution). 
-
-- ARG inference and variant dating methods that work well with
-    large, heterogeneous, and unbalanced biobanks
-    can provide valuable insights into genetic variation
-    **without the need for discrete categorizations**.
+- ARGs let us describe the complexity of human genetic variation
+    in a way that can include everyone.
 
 
 
@@ -686,3 +659,31 @@ Funding:
 
 
 ## {data-background-image="figs/guillemots_thanks.png" data-background-position=center data-background-size=50%}
+
+
+
+## Sample size {data-background-image="figs/folks/yan_wong.jpg" data-background-position="bottom 50px right 50px" data-background-size=10%}
+
+![](figs/sample_size_perf0.png)
+
+<!-- Fig 2: Outline and performance of tsdate on a known, simulated tree sequence of 2.85
+million chromosomes (chr17), conditioned on a known human pedigree. 
+Accuracy and error distribution of mutation dates: times are the midpoint of
+nodes above and below the mutation, restricted to sites with a single mutation present in the
+smallest (n = 25) tree sequence. Inset scatterplots illustrate how large sample sizes increase
+dating accuracy for recent mutations. Tickmarks on the error distributions are marked with
+median, 5% and 95% quantiles -->
+
+
+
+## Validation: real data {data-background-image="figs/folks/yan_wong.jpg" data-background-position="bottom 50px right 50px" data-background-size=10%}
+
+![](figs/validation_sub.png)
+
+
+## Deleterious variants are enriched in recent times {data-background-image="figs/bayes_factor.png" data-background-position=center data-background-size=50%}
+
+
+-----------
+
+![](figs/sam/example-indiv.png)
