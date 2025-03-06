@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="Peter Ralph   University of Oregon   Department of Data Science">
+  <title>Dating large ARGs, with clinical applications</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="./reveal.js/dist/reset.css">
+  <link rel="stylesheet" href="./reveal.js/dist/reveal.css">
+  <style>
+    .reveal .sourceCode {  /* see #7635 */
+      overflow: visible;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="./reveal.js/dist/theme/simple.css" id="theme">
+  <style type="text/css">
+
+  .reveal { font-size: 24px; }
+
+  .reveal h1 { font-size: 1.5em; } 
+
+  .reveal h2 { font-size: 1.2em; } 
+
+  .reveal .slides { text-align: left; }
+
+  .reveal .slides figure { text-align: center; }
+
+  .centered p { text-align: center; }
+
+  /* apply this to the columns div */
+  div.vcentered { display: flex; align-items: center; }
+
+  .caption p { font-size: 75%; font-style: italic; color: #0006; }
+
+  .greyed { color: #4444; }
+
+  div.floatright { float: right; text-align: right; }
+
+  .reveal figcaption { display: none; }
+
+  .reveal img { border: none; }
+
+  .reveal section img { border: none; }
+
+  .MathJax_Display { margin: 0; }
+
+  img.finger { vertical-align: text-top; }
+
+  .smaller { font-size: 50%; }
+  .smallish { font-size: 80%; }
+
+  .hide { opacity: 0; }
+
+  .red { color: red; }
+  .blue { color: blue; }
+
+  .coverup { background: white; }
+
+  </style>
+
+  <div style="display: none">
+  \[
+  \usepackage{amsmath}
+  \usepackage{amssymb}
+  \usepackage{xcolor}
+
+  \newcommand{\R}{\mathbb{R}}
+  \newcommand{\Q}{\mathbb{Q}}
+  \newcommand{\Z}{\mathbb{Z}}
+  \newcommand{\N}{\mathbb{N}}
+  \newcommand{\C}{\mathbb{C}}
+
+  \renewcommand{\P}{\mathbb{P}}
+  \newcommand{\E}{\mathbb{E}}
+
+  \newcommand{\var}{\mathop{\mbox{Var}}}
+  \newcommand{\cov}{\mathop{\mbox{cov}}}
+  \newcommand{\median}{\mathop{\mbox{median}}}
+  %\newcommand{\det}{\mathop{\mbox{det}}}
+  \newcommand{\supp}{\mathop{\mbox{supp}}}
+  \newcommand{\sgn}{\mathop{\mbox{sgn}}}
+
+  \newcommand{\conv}{\mathop{\mbox{conv}}}
+  \newcommand{\deq}{\stackrel{\scriptscriptstyle{d}}{=}}
+  \newcommand{\dcv}{\stackrel{\scriptscriptstyle{d}}{\longrightarrow}}
+
+  \]
+  </div>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" data-background-image="figs/dating_problem/dating_problem_05.png" data-background-position="bottom
+50px right 50px" data-background-size="35%">
+  <h1 class="title">Dating large ARGs, with clinical applications</h1>
+  <p class="author">Peter Ralph <br/> University of Oregon <br/>
+Department of Data Science</p>
+  <p class="date">ProbGen 2025<br/>Cold Spring Harbor Lab</p>
+</section>
+
+<section>
+<section id="section" class="title-slide slide level1">
+<h1></h1>
+<div class="columns">
+<div class="column" style="width:65%;">
+<p><img data-src="figs/folks/Sam-Tallman.jpg" style="width:32.0%"
+alt="Sam Tallman" /> <img data-src="figs/folks/yan_wong.jpg"
+style="width:30.0%" alt="Yan Wong" /> <img
+data-src="figs/folks/ben_jeffery.jpg" style="width:30.0%"
+alt="Ben Jeffery" /> <img data-src="figs/folks/jerome_kelleher.jpg"
+style="width:30.0%" alt="Jerome Kelleher" /> <img
+data-src="figs/folks/duncan-mr.jpeg" style="width:30.0%"
+alt="Duncan Mbuli-Robertson" /> <img data-src="figs/nate-pope.png"
+style="width:28.0%" alt="Nate Pope" /></p>
+</div><div class="column" style="width:35%;">
+<p><a href="https://tskit.dev"><img data-src="figs/tskit_logo.png"
+style="width:60.0%" alt="tskit logo" /></a></p>
+<p>Sam Tallman (Genomics England)</p>
+<p>Yan Wong (Oxford)</p>
+<p>Ben Jeffery (Oxford)</p>
+<p>Jerome Kelleher (Oxford)</p>
+<p>Duncan Mbuli-Robertson (Oxford)</p>
+<p>Nate Pope (U Oregon)</p>
+<div class="fragment">
+<p><em>slides in part due to Sam Tallman</em></p>
+</div>
+</div>
+</div>
+<!--
+Abstract: The Ancestral Recombination Graph (or, ARG) is a way of representing all ancestral relationships
+between a collection of recombining genomes. It can be viewed as a collection of trees along the genome
+or as a set of inheritance relationships between modern and ancestral haplotypes. If known, it gives
+a more natural and informative way to summarize genetic variation: for instance, by providing ages and
+inheritance patterns of the mutations that led to modern variants. In this talk I will summarize recent
+progress in estimating whole-genome ARGs, including from Biobank-scale datasets, and describe how this
+way of representing data leads to orders-of-magnitude improvements in storage and computation. I will also
+describe a (variational) Bayesian method for estimating the times of events in a given ARG, leading to
+substantial improvements in dating accuracy. Using the new method on ARGs estimated from 50,000 whole genomes,
+I will show that inferred dates are more informative about SNP pathogenicity than allele frequency.
+This is one example of how ARGs provide a way to summarize genetic variation without relying on
+the more usual problematic and inaccurate division into "populations".
+-->
+</section>
+<section class="slide level2">
+
+<blockquote>
+<p>UO is located on the traditional indigenous homeland of the Kalapuya
+people. Kalapuya people were dispossessed of their indigenous homeland
+by the United States government and forcibly removed. Today, Kalapuya
+descendants are primarily citizens of the Confederated Tribes of Grand
+Ronde and the Confederated Tribes of Siletz Indians, and continue to
+make important contributions to their communities, to the UO, to Oregon,
+and to the world.</p>
+</blockquote>
+</section></section>
+<section>
+<section id="whats-an-arg" class="title-slide slide level1">
+<h1>What’s an ARG?</h1>
+
+</section>
+<section id="what-is-an-arg" class="slide level2">
+<h2>What is an ARG?</h2>
+<p>For a set of sampled chromosomes, an Ancestral Recombination Graph
+describes at each position along the genome the genealogical tree that
+says how they are related.</p>
+<figure>
+<img data-src="figs/example.svg" alt="Trees along a chromosome" />
+<figcaption aria-hidden="true">Trees along a chromosome</figcaption>
+</figure>
+</section>
+<section id="section-1" class="slide level2">
+<h2></h2>
+<div class="columns">
+<div class="column" style="width:30%;">
+<p>Better, in some ways, is to think of an ARG as a set of relationships
+between haplotypes.</p>
+<p><em>A forest is more than its trees: <a
+href="https://www.biorxiv.org/content/10.1101/2024.11.30.626138v2.abstract">Fritze
+et al 2025</a></em></p>
+</div><div class="column centered">
+<p><img data-src="lit/hudson1991.png" style="width:60.0%" /></p>
+</div>
+</div>
+</section>
+<section id="more-thoughts-on-args" class="slide level2"
+data-background-image="lit/hudson1991.png"
+data-background-position="right" data-background-size="40%">
+<h2 data-background-image="lit/hudson1991.png"
+data-background-position="right" data-background-size="40%">More
+thoughts on ARGs</h2>
+<p>An ARG provides</p>
+<div>
+<ul>
+<li class="fragment">a (non-pairwise!) way to work with haplotypes</li>
+<li class="fragment">a sparse (matrix) representation <em>(Hanbin Lee:
+Friday 1:30)</em></li>
+<li class="fragment">a <em>time</em> axis for genomic data</li>
+</ul>
+</div>
+<!-- [Bisschop et al 2025](https://www.biorxiv.org/content/10.1101/2025.02.24.639977v1.abstract)* -->
+<div class="fragment">
+<p><em>Today:</em> given (the structure of) an inferred ARG,
+<em>date</em> it.</p>
+<!-- GEL -->
+</div>
+</section></section>
+<section>
+<section id="application-pathogenic-variants"
+class="title-slide slide level1">
+<h1>Application: pathogenic variants</h1>
+<p>in the <a
+href="https://www.genomicsengland.co.uk/initiatives/100000-genomes-project">UK
+100,000 Genomes project</a></p>
+</section>
+<section id="section-2" class="slide level2"
+data-background-image="figs/gel-rare-diseases.png"
+data-background-position="center" data-background-size="100%">
+<h2 data-background-image="figs/gel-rare-diseases.png"
+data-background-position="center" data-background-size="100%"></h2>
+</section>
+<section id="the-100000-genomes-project" class="slide level2"
+data-background-image="figs/folks/Sam-Tallman.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="20%">
+<h2 data-background-image="figs/folks/Sam-Tallman.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="20%">The 100,000 Genomes Project</h2>
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li><p>UK initiative to sequence 100,000 genomes from 85,000 NHS
+patients and family members affected by rare disease or cancer.</p></li>
+<li><p>71,800 participants (probands and family members) across over 190
+rare diseases, none with genetic diagnoses prior to
+recruitment.</p></li>
+<li><p>Since 2018, over 6,000 genetic diagnoses</p></li>
+</ul>
+</div><div class="column" style="width:40%;">
+<p><img data-src="figs/gel-logo.png" style="width:90.0%" /></p>
+</div>
+</div>
+</section>
+<section id="motivation-penetrant-pathogenic-variants-usually-rare"
+class="slide level2">
+<h2>Motivation: penetrant, pathogenic variants usually rare</h2>
+<div class="centered">
+<p><img data-src="figs/sam/variant-classification.jpg"
+style="width:120.0%" /></p>
+</div>
+<div class="caption">
+<p><a href="https://www.nature.com/articles/gim201737">Nykamp et
+al. 2017</a></p>
+</div>
+</section>
+<section id="but-datasets-are-notoriously-unbalanced"
+class="slide level2">
+<h2>But: datasets are notoriously unbalanced</h2>
+<div class="columns">
+<div class="columns" width="50%">
+<div class="fragment">
+<p><img data-src="figs/genome-study-representation.png"
+style="width:80.0%" /></p>
+<div class="caption">
+<p>Sam Tallman</p>
+</div>
+</div>
+</div><div class="columns" width="50%">
+<div class="fragment">
+<p><img data-src="figs/manrai_2016_nejm.jpg" style="width:100.0%" /></p>
+<div class="caption">
+<p><a href="https://www.nejm.org/doi/pdf/10.1056/NEJMsa1507092">Manrai
+et al 2016</a>, <em>Genetic Misdiagnoses and the Potential for Health
+Disparities</em> <!--
+BACKGROUND
+For more than a decade, risk stratification for hypertrophic cardiomyopathy has
+been enhanced by targeted genetic testing. Using sequencing results, clinicians
+routinely assess the risk of hypertrophic cardiomyopathy in a patient’s relatives
+and diagnose the condition in patients who have ambiguous clinical presentations.
+However, the benefits of genetic testing come with the risk that variants may be
+misclassified.
+METHODS
+Using publicly accessible exome data, we identified variants that have previously
+been considered causal in hypertrophic cardiomyopathy and that are overrepre-
+sented in the general population. We studied these variants in diverse populations
+and reevaluated their initial ascertainments in the medical literature. We reviewed
+patient records at a leading genetic-testing laboratory for occurrences of these
+variants during the near-decade-long history of the laboratory.
+RESULTS
+Multiple patients, all of whom were of African or unspecified ancestry, received
+positive reports, with variants misclassified as pathogenic on the basis of the
+understanding at the time of testing. Subsequently, all reported variants were re-
+categorized as benign. The mutations that were most common in the general
+population were significantly more common among black Americans than among
+white Americans (P<0.001). Simulations showed that the inclusion of even small
+numbers of black Americans in control cohorts probably would have prevented
+these misclassifications. We identified methodologic shortcomings that contrib-
+uted to these errors in the medical literature.
+CONCLUSIONS
+The misclassification of benign variants as pathogenic that we found in our study
+shows the need for sequencing the genomes of diverse populations, both in asymp-
+tomatic controls and the tested patient population. These results expand on cur-
+rent guidelines, which recommend the use of ancestry-matched controls to inter-
+pret variants. As additional populations of different ancestry backgrounds are
+sequenced, we expect variant reclassifications to increase, particularly for ancestry
+groups that have historically been less well studied. 
+--></p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="what-does-allele-frequency-tell-us" class="slide level2">
+<h2>What <em>does</em> allele frequency tell us?</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p>If we see <span class="math inline">\(n\)</span> people with a
+certain allele (of single origin):</p>
+<div>
+<ul>
+<li class="fragment">those <span class="math inline">\(n\)</span> people
+have that allele…</li>
+<li class="fragment">and so did their common ancestors.</li>
+<li class="fragment">How <em>many</em> of those common ancestors there
+were depends on the age.</li>
+</ul>
+</div>
+</div><div class="column" style="width:50%;">
+<p><img data-src="figs/mut_age_and_freq.svg" style="width:100.0%" /></p>
+</div>
+</div>
+</section>
+<section id="so-what-about-age" class="slide level2"
+data-background-image="figs/folks/yan_wong.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="10%">
+<h2 data-background-image="figs/folks/yan_wong.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="10%">So: what <em>about</em> age?</h2>
+<div class="r-stack">
+<div class="fragment">
+<p><img data-src="figs/sampling_sim_ages_l1.png"
+style="width:90.0%" /></p>
+</div>
+<div class="fragment">
+<p><img data-src="figs/sampling_sim_ages_l1_l2.png"
+style="width:90.0%" /></p>
+</div>
+</div>
+<p>Sims: stdpopsim/HomSap/chr17/OutOfAfrica_3G09/Mixed_K23</p>
+</section></section>
+<section>
+<section id="variational-dating-tsdate-0.2"
+class="title-slide slide level1">
+<h1>Variational dating: tsdate 0.2</h1>
+<div class="centered">
+<p><img data-src="figs/tsdate_logo.png" style="width:30.0%" /></p>
+</div>
+<div class="floatright">
+<figure>
+<img data-src="figs/nate-pope.png" style="width:50.0%" alt="tsNate" />
+<figcaption aria-hidden="true">tsNate</figcaption>
+</figure>
+</div>
+<div class="caption floatright">
+<p>Nate Pope</p>
+</div>
+</section>
+<section id="dating-an-arg" class="slide level2"
+data-background-image="figs/nate-pope.png"
+data-background-position="bottom 50px left 50px"
+data-background-size="10%">
+<h2 data-background-image="figs/nate-pope.png"
+data-background-position="bottom 50px left 50px"
+data-background-size="10%">Dating an ARG</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><em>Given</em> an ARG with:</p>
+<ul>
+<li>nodes <span class="math inline">\(\mathcal{N}\)</span></li>
+<li>edges <span class="math inline">\(\mathcal{E} \subset \{i \to j : i,
+j \in \mathcal{N}\}\)</span></li>
+<li>mutation counts per edge <span class="math inline">\(\{y_{ij} : ij
+\in \mathcal{E}\}\)</span></li>
+<li><em>sample</em> nodes with known time</li>
+</ul>
+<p><em>Infer:</em></p>
+<ul>
+<li>times <span class="math inline">\(\{t_i\}\)</span> of remaining
+nodes</li>
+<li>satisfying the constraints <span class="math inline">\(\{t_i &lt;
+t_j : i \to j \in \mathcal{E}\}\)</span></li>
+</ul>
+</div><div class="column" style="width:50%;">
+<div class="r-stack">
+<p><img data-src="figs/dating_problem/dating_problem_00.png" /></p>
+<div class="fragment">
+<p><img data-src="figs/dating_problem/dating_problem_01.png" /></p>
+</div>
+<div class="fragment">
+<p><img data-src="figs/dating_problem/dating_problem_02.png" /></p>
+</div>
+<div class="fragment">
+<p><img data-src="figs/dating_problem/dating_problem_03.png" /></p>
+</div>
+<div class="fragment">
+<p><img data-src="figs/dating_problem/dating_problem_04.png" /></p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="dating-an-arg-1" class="slide level2"
+data-background-image="figs/nate-pope.png"
+data-background-position="bottom 50px left 50px"
+data-background-size="10%">
+<h2 data-background-image="figs/nate-pope.png"
+data-background-position="bottom 50px left 50px"
+data-background-size="10%">Dating an ARG</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><em>Goal:</em> find <span class="math inline">\(\{t_i\}\)</span></p>
+<p><em>The model:</em> with mutation rate <span
+class="math inline">\(\mu\)</span>, edge span <span
+class="math inline">\(s_{ij}\)</span>: <span
+class="math display">\[y_{ij} \sim \text{Poisson}(\mu s_{ij} (t_j - t_i)
+)\]</span></p>
+<div class="fragment">
+<p><em>The MLE:</em> minimize <span
+class="math display">\[\begin{aligned}&amp;\sum_{ij \in \mathcal{E}} \mu
+s_{ij} (t_j - t_j) \\&amp;\qquad{}- y_{ij} \log\left(\mu s_{ij} (t_j -
+t_j)\right)\end{aligned}\]</span> subject to <span
+class="math inline">\(\{t_i &lt; t_j : i \to j \in
+\mathcal{E}\}\)</span></p>
+</div>
+</div><div class="column" style="width:50%;">
+<p><img data-src="figs/dating_problem/dating_problem_04.png" /></p>
+</div>
+</div>
+</section>
+<section id="but-what-about-uncertainty" class="slide level2"
+data-background-image="figs/nate-pope.png"
+data-background-position="bottom 50px left 50px"
+data-background-size="10%">
+<h2 data-background-image="figs/nate-pope.png"
+data-background-position="bottom 50px left 50px"
+data-background-size="10%">But, what about uncertainty?</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><em>New goal</em>: infer <span class="math inline">\(t =
+\{t_i\}\)</span>, but Bayesian</p>
+<div>
+<ul>
+<li class="fragment"><p>Given a prior <span
+class="math inline">\(p(t)\)</span>,</p></li>
+<li class="fragment"><p>the per-edge likelihood is <span
+class="math display">\[p(y_{ij}|t_i-t_j) \propto (t_j - t_j)^{y_{ij}}
+e^{-\mu s_{ij} (t_i - t_j)}\]</span></p></li>
+<li class="fragment"><p>the full posterior is <span
+class="math display">\[p(t,y) = p(t) \prod_{ij} p(y_{ij}|t_i -
+t_j)\]</span></p></li>
+<li class="fragment"><p>and so the marginal posterior on <span
+class="math inline">\(t_i\)</span> is <span
+class="math display">\[p(t_i|y) = \frac{\int p(t,y) dt_{\setminus
+i}}{\int p(t,y) dt}\]</span></p></li>
+<li class="fragment"><p>but, those integrals are rather
+difficult.</p></li>
+</ul>
+</div>
+</div><div class="column" style="width:50%;">
+<div class="floatright">
+<p><img data-src="figs/dating_problem/dating_problem_05.png"
+style="width:120.0%" /></p>
+</div>
+</div>
+</div>
+</section>
+<section id="variational-approximation" class="slide level2"
+data-background-image="figs/nate-pope.png"
+data-background-position="bottom 50px left 50px"
+data-background-size="10%">
+<h2 data-background-image="figs/nate-pope.png"
+data-background-position="bottom 50px left 50px"
+data-background-size="10%">Variational approximation</h2>
+<div class="columns">
+<div class="column" style="width:70%;">
+<ul>
+<li><p>Approximate posterior marginals by Gamma distribution</p></li>
+<li><p>Fit by matching moments</p></li>
+<li><p>Result (hopefully) has exact marginal moments but ignores
+dependence in posterior</p></li>
+</ul>
+</div><div class="column" style="width:70%;">
+<div class="r-stack">
+<div class="fragment">
+<p><img data-src="figs/nate/plot_like.png" /></p>
+</div>
+<div class="fragment">
+<p><img data-src="figs/nate/plot_exact.png" /></p>
+</div>
+<div class="fragment">
+<p><img data-src="figs/nate/plot_both.png" /></p>
+</div>
+</div>
+</div>
+</div>
+<!--
+## Expectation propagation
+
+factor variational posterior
+into edge terms (like true posterior)
+
+then do iterative refinement of edge contributions
+
+that reduces to adjusting moments for $i$ and $j$
+thanks to exponential family magic
+
+and some serious computational magic
+-->
+</section>
+<section id="some-assembly-required" class="slide level2">
+<h2>Some assembly required</h2>
+<div class="columns">
+<div class="column" style="width:70%;">
+<ul>
+<li>Fit by expectation propagation,</li>
+<li>requiring efficient stable computation of <span
+class="math inline">\({}_2F_1(a,b;c;z)\)</span>.</li>
+</ul>
+<p>Additional magic:</p>
+<ul>
+<li>ambiguous singleton phasing</li>
+<li>better prior on root ages</li>
+<li>“recalibration” of times to enforce molecular clock</li>
+</ul>
+</div><div class="column" style="width:70%;">
+<p><img data-src="figs/tsdate_logo.png" style="width:50.0%" /></p>
+<p><img data-src="figs/nate-pope.png" style="width:50.0%" /></p>
+</div>
+</div>
+</section>
+<section id="runtime" class="slide level2">
+<h2>Runtime</h2>
+<div class="r-stack">
+<div class="centered fragment">
+<p><img data-src="figs/runtime0.png" style="width:70.0%" /></p>
+</div>
+<div class="centered fragment">
+<p><img data-src="figs/runtime.png" style="width:70.0%" /></p>
+</div>
+</div>
+<!-- Fig 2: Outline and performance of tsdate on a known, simulated tree sequence of 2.85
+million chromosomes (chr17), conditioned on a known human pedigree.5 (A) Computational
+requirements (B) Increased accuracy of node time estimates with increasing rounds of expectation
+propagation -->
+</section>
+<section id="validation-simulation" class="slide level2"
+data-background-image="figs/folks/yan_wong.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="10%">
+<h2 data-background-image="figs/folks/yan_wong.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="10%">Validation: simulation</h2>
+<div class="r-stack">
+<div class="fragment">
+<p><img data-src="figs/sampling_sim_sub_l1_l2.png"
+style="width:70.0%" /></p>
+</div>
+<div class="fragment">
+<p><img data-src="figs/sampling_sim_sub_l1_l2_l3.png"
+style="width:70.0%" /></p>
+</div>
+</div>
+</section>
+<section id="sample-size" class="slide level2"
+data-background-image="figs/folks/yan_wong.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="10%">
+<h2 data-background-image="figs/folks/yan_wong.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="10%">Sample size</h2>
+<p><img data-src="figs/sample_size_perf0.png" /></p>
+<!-- Fig 2: Outline and performance of tsdate on a known, simulated tree sequence of 2.85
+million chromosomes (chr17), conditioned on a known human pedigree. 
+Accuracy and error distribution of mutation dates: times are the midpoint of
+nodes above and below the mutation, restricted to sites with a single mutation present in the
+smallest (n = 25) tree sequence. Inset scatterplots illustrate how large sample sizes increase
+dating accuracy for recent mutations. Tickmarks on the error distributions are marked with
+median, 5% and 95% quantiles -->
+</section>
+<section id="validation-real-data" class="slide level2"
+data-background-image="figs/folks/yan_wong.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="10%">
+<h2 data-background-image="figs/folks/yan_wong.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="10%">Validation: real data</h2>
+<p><img data-src="figs/validation_sub.png" /></p>
+</section></section>
+<section>
+<section id="back-to-the-data" class="title-slide slide level1">
+<h1>Back to the data</h1>
+
+</section>
+<section id="section-3" class="slide level2"
+data-background-image="figs/folks/ben_jeffery.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="10%">
+<h2 data-background-image="figs/folks/ben_jeffery.jpg"
+data-background-position="bottom 50px right 50px"
+data-background-size="10%"></h2>
+<p>tsinfer <span class="math inline">\(\to\)</span> tsdate:</p>
+<p>We built whole-chromosome tree sequences from the phased 100,000
+Genomes Project (aggV2) dataset.</p>
+<p><em>Chromosome 17:</em> 5,680,570 ancestral genomes, ~870Mb.</p>
+<p><img data-src="figs/sam/chr17age_vs_freq.png" /></p>
+</section>
+<section id="working-with-uncertainty" class="slide level2">
+<h2>Working with uncertainty</h2>
+<p><strong>BF</strong>: quantifies (as an odds ratio) the probability
+that a given mutation is older than expected relative to some reference
+set of mutations at the same frequency in the data</p>
+<div class="centered">
+<p><img data-src="figs/bayes_factor.png" style="width:80.0%" /></p>
+</div>
+</section>
+<section id="deleterious-variants-are-enriched-in-recent-times"
+class="slide level2" data-background-image="figs/bayes_factor.png"
+data-background-position="center" data-background-size="50%">
+<h2 data-background-image="figs/bayes_factor.png"
+data-background-position="center" data-background-size="50%">Deleterious
+variants are enriched in recent times</h2>
+<p><img data-src="figs/missense_enrichment.png" /></p>
+</section>
+<section class="slide level2">
+
+<p><img data-src="figs/enrichment3.png" /></p>
+</section>
+<section class="slide level2">
+
+<p><img data-src="figs/sam/example-indiv.png" /></p>
+</section>
+<section id="conclusions" class="slide level2">
+<h2>Conclusions</h2>
+<ul>
+<li><p>Mutations may be rare because they are recent or just because the
+individual’s ancestry is not well-represented in the data.</p></li>
+<li><p>ARGs capture the complex and continuous nature of human genetic
+ancestry.</p></li>
+<li><p>Mutations’ age estimation reflects this uncertainty (at single
+locus resolution).</p></li>
+<li><p>ARG inference and variant dating methods that work well with
+large, heterogeneous, and unbalanced biobanks can provide valuable
+insights into genetic variation <strong>without the need for discrete
+categorizations</strong>.</p></li>
+</ul>
+</section></section>
+<section>
+<section id="wrap-up" class="title-slide slide level1">
+<h1>Wrap-up</h1>
+<!--
+## Software development goals
+
+::: {.columns}
+:::::: {.column width=50%}
+
+- open
+- welcoming and supportive
+- reproducible and well-tested
+- backwards compatible
+- well-documented
+- capacity building
+
+::: {.centered}
+![popsim logo](figs/popsim.png){width=35%}
+:::
+
+[PopSim Consortium](https://popsim-consortium.github.io/stdpopsim-docs/stable/index.html)
+
+:::
+:::::: {.column width=50%}
+
+
+::: {.centered}
+![tskit logo](figs/tskit_logo.png){width=60%}
+
+[tskit.dev](https://tskit.dev)
+
+![SLiM logo](figs/slim_logo.png){width=80%}
+:::
+
+:::
+::::::
+-->
+</section>
+<section id="thanks" class="slide level2">
+<h2>Thanks!</h2>
+<div class="columns">
+<div class="column" style="width:40%;">
+<div style="font-size: 85%;">
+<ul>
+<li>Andy Kern</li>
+<li>Nate Pope</li>
+<li>Thomas Forest</li>
+<li>Murillo Rodrigues</li>
+<li>Clara Rehmann</li>
+<li>Anastasia Teterina</li>
+<li>Gilia Patterson</li>
+<li>Chris Smith</li>
+<li>Jiseon Min</li>
+<li>Angel Rivera-Colon <!--
+- Victoria Caudill
+- Bruce Edelman
+- Matt Lukac
+- Saurabh Belsare
+- Gabby Coffing
+- Jeff Adrion
+- CJ Battey
+- Jared Galloway
+--></li>
+<li>the rest of <a href="https://kr-colab.github.io/people">the
+Co-Lab</a></li>
+</ul>
+<p>Funding:</p>
+<ul>
+<li>NIH NIGMS</li>
+</ul>
+</div>
+<p><img src="figs/KernRalph_5x5.png" alt="KR-colab logo" style="width: 50%; margin: 0px;"/></p>
+</div><div class="column" style="width:60%;">
+<div class="columns">
+<div class="column" style="width:30%;">
+<div style="font-size: 85%;">
+<ul>
+<li>Jerome Kelleher</li>
+<li>Ben Haller</li>
+<li>Yan Wong</li>
+<li>Ben Jeffery</li>
+<li>Sam Tallman</li>
+<li>Duncan Mbuli-Robertson</li>
+<li>Hanbin Lee</li>
+<li>Gregor Gorjanc <!--
+- Elsie Chevy
+- Madeline Chase
+- Sean Stankowski
+- Matt Streisfeld
+- Georgia Tsambos
+- Jaime Ashander
+- Jared Galloway
+- Gideon Bradburd
+- Bill Cresko
+- Alison Etheridge
+- Evan McCartney-Melstad
+- Brad Shaffer
+--></li>
+</ul>
+</div>
+</div><div class="column" style="width:30%;">
+<div class="centered" style="margin-top: -20px;">
+<p><img src="figs/tskit_logo.png" alt="tskit logo" style="width: 60%; margin: 10px;"/>
+<img src="figs/slim_logo.png" alt="SLiM logo" style="width: 90%; margin: 10px;"/></p>
+</div>
+</div>
+</div>
+<div style="margin-top: -10px;">
+<p><img data-src="figs/colab.png" style="width:70.0%" /></p>
+</div>
+</div>
+</div>
+</section>
+<section id="section-4" class="slide level2"
+data-background-image="figs/guillemots_thanks.png"
+data-background-position="center" data-background-size="50%">
+<h2 data-background-image="figs/guillemots_thanks.png"
+data-background-position="center" data-background-size="50%"></h2>
+</section></section>
+    </div>
+  </div>
+
+  <script src="./reveal.js/dist/reveal.js"></script>
+
+  <!-- reveal.js plugins -->
+  <script src="./reveal.js/plugin/notes/notes.js"></script>
+  <script src="./reveal.js/plugin/search/search.js"></script>
+  <script src="./reveal.js/plugin/zoom/zoom.js"></script>
+  <script src="./reveal.js/plugin/math/math.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+        // Display controls in the bottom right corner
+        controls: true,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: true,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'bottom-right',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: true,
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: false,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: true,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'default',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: true,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'fade',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        math: {
+          mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    </body>
+</html>
